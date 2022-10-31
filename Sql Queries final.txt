@@ -1,0 +1,37 @@
+--Weekly analysis of confirmed cases
+
+create database db
+use db
+select * from dbo.datedf
+
+select date,status,sum(total) as total from datedf group by Status,date order by date
+
+select date,status,sum(total) as total into new_table from datedf group by Status,date order by date
+
+select * from new_table order by date
+
+select status,DATEPART(week,date) as W,month(date) as M, YEAR(date) as Y,sum(total) as Total into Weekly_analysis
+from new_table group by Status, date order by YEAR(date),month(date),DATEPART(week,date)
+
+select status,DATEPART(WEEK, date)  -
+    DATEPART(WEEK, DATEADD(MM, DATEDIFF(MM,0,date), 0))+ 1 AS WEEK_OF_MONTH,datename(month,date) as M, YEAR(date) as Y,sum(total) as Total 
+into final_weekly_analysis_new from new_table group by Status, date order by YEAR(date),month(date),DATEPART(week,month(date))
+
+select *,DATENAME(month,M) from Weekly_analysis
+
+
+SELECT DATEPART(WEEK, date)  -
+    DATEPART(WEEK, DATEADD(MM, DATEDIFF(MM,0,date), 0))+ 1 AS WEEK_OF_MONTH from date
+
+	select * from final_weekly_analysis_new
+--for grouping the confirmed cases across states and months:
+-- for finding out the worst month with respect to confirmed cases
+use db
+select state,month(date) as month, sum(total) as total_confirmed into state_month_confirmed
+from datedf where Status = 'confirmed' group by state,month(date) order by state, month(date)
+
+select * from state_month_confirmed order by state, month
+
+select month,sum(total_confirmed) as net_total into worst_month from state_month_confirmed group by month order by sum(total_confirmed) desc
+
+select * from worst_month
